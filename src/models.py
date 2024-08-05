@@ -1,32 +1,34 @@
 import os
 import sys
-from sqlalchemy import Column, ForeignKey, Integer, String
+from sqlalchemy import Column, ForeignKey, Integer, String, Enum, Table
 from sqlalchemy.orm import relationship, declarative_base
 from sqlalchemy import create_engine
 from eralchemy2 import render_er
 
 Base = declarative_base()
 
-class Person(Base):
-    __tablename__ = 'person'
-    # Here we define columns for the table person
-    # Notice that each column is also a normal Python instance attribute.
+favorites_characters = Table('favorites_characters', Base.metadata,
+    Column('user_id', Integer, ForeignKey('user.id')),
+    Column('character_id', Integer, ForeignKey('character.id'))
+)
+
+
+favorites_planets = Table('favorites_planets', Base.metadata,
+    Column('user_id', Integer, ForeignKey('user.id')),
+    Column('planet_id', Integer, ForeignKey('planet.id'))
+)
+
+class User(Base):
+    __tablename__ = 'user'
     id = Column(Integer, primary_key=True)
-    name = Column(String(250), nullable=False)
+    username = Column(String(50), nullable=False, unique=True)
+    email = Column(String(100), nullable=False, unique=True)
+    password = Column(String(100), nullable=False)
 
-class Address(Base):
-    __tablename__ = 'address'
-    # Here we define columns for the table address.
-    # Notice that each column is also a normal Python instance attribute.
+    favorite_characters = relationship('Character', secondary=favorites_characters, back_populates='favorited_by')
+    favorite_planets = relationship('Planet', secondary=favorites_planets, back_populates='favorited_by')
+
+class Character(Base):
+    __tablename__ = 'character'
     id = Column(Integer, primary_key=True)
-    street_name = Column(String(250))
-    street_number = Column(String(250))
-    post_code = Column(String(250), nullable=False)
-    person_id = Column(Integer, ForeignKey('person.id'))
-    person = relationship(Person)
-
-    def to_dict(self):
-        return {}
-
-## Draw from SQLAlchemy base
-render_er(Base, 'diagram.png')
+    name = Column(String(100))
